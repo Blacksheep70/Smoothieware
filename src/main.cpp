@@ -21,6 +21,7 @@
 #include "FilamentDetector.h"
 #include "MotorDriverControl.h"
 
+#include "modules/utils/galvocontrol/GalvoControl.h" 
 #include "modules/robot/Conveyor.h"
 #include "modules/utils/simpleshell/SimpleShell.h"
 #include "modules/utils/configurator/Configurator.h"
@@ -188,6 +189,9 @@ void init() {
     #endif
     #ifndef NO_UTILS_MOTORDRIVERCONTROL
     kernel->add_module( new MotorDriverControl(0) );
+    #endif
+    #ifndef NO_UTILS_GALVOCONTROL
+    kernel->add_module(new GalvoControl(0));
     #endif
     // Create and initialize USB stuff
     u.init();

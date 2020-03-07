@@ -19,10 +19,12 @@
 #include <string>
 #include <vector>
 
-#define galvo_controller_checksum      CHECKSUM("galvo_controller")
+#define galvo_controller_checksum      CHECKSUM("galvo_control")
 #define enable_checksum                CHECKSUM("enable")
+#define dac_checksum                   CHECKSUM("dac")
 #define spi_channel_checksum           CHECKSUM("spi_channel")
 #define spi_cs_pin_checksum            CHECKSUM("spi_cs_pin")
+#define spi_latch_pin_checksum         CHECKSUM("spi_latch_pin")
 #define spi_frequency_checksum         CHECKSUM("spi_frequency")
 
 GalvoControl::GalvoControl(uint8_t id) : id(id){
@@ -51,12 +53,38 @@ void GalvoControl::on_module_loaded(){
 
 bool GalvoControl::config_module(uint16_t cs){
 
+    std::string str = THEKERNEL->config->value(galvo_controller_checksum, cs, dac_checksum)->by_default("")->as_string();
+    if(str.empty()) {
+        THEKERNEL->streams->printf("GalvoControl ERROR: dac type not defined\n");
+        return false; // dac type required
+    }
+
     using std::placeholders::_1;
     using std::placeholders::_2;
     using std::placeholders::_3;
 
-    dac = new MCP4922(std::bind( &GalvoControl::sendSPI, this, _1, _2, _3));
+    if(str == "MCP4922"){
+        dac = new MCP4922(std::bind( &GalvoControl::sendSPI, this, _1, _2, _3));
+    }
+    else{
+        THEKERNEL->streams->printf("GalvoControl ERROR: Unknown DAC type: %s\n", str.c_str());
+        return false;
+    }
 
+    spi_cs_pin.from_string(THEKERNEL->config->value( galvo_controller_checksum, cs, spi_cs_pin_checksum)->by_default("nc")->as_string())->as_output();
+    if(!spi_cs_pin.connected()) {
+        THEKERNEL->streams->printf("GalvoControl ERROR: chip select not defined\n");
+        return false; // if not defined then we can't use this instance
+    }
+    spi_cs_pin.set(1);
+
+    spi_latch_pin.from_string(THEKERNEL->config->value( galvo_controller_checksum, cs, spi_latch_pin_checksum)->by_default("nc")->as_string())->as_output();
+    if(!spi_latch_pin.connected()) {
+        THEKERNEL->streams->printf("GalvoControl ERROR: dac latch pin not defined\n");
+        return false; // if not defined then we can't use this instance
+    }
+    spi_latch_pin.set(1);
+    
     // select which SPI channel to use
     int spi_channel = THEKERNEL->config->value(galvo_controller_checksum, cs, spi_channel_checksum)->by_default(1)->as_number();
     int spi_frequency = THEKERNEL->config->value(galvo_controller_checksum, cs, spi_frequency_checksum)->by_default(1000000)->as_number();
@@ -76,7 +104,19 @@ bool GalvoControl::config_module(uint16_t cs){
     this->spi->frequency(spi_frequency);
     this->spi->format(8, 0); // 8bit, mode0
 
+    this->register_for_event(ON_GCODE_RECEIVED);
+
     return true;
+}
+
+void GalvoControl::on_gcode_received(void *argument){
+    Gcode *gcode = static_cast<Gcode*>(argument);
+
+    if (gcode->has_m){
+        if(gcode->m == 888){
+            gcode->stream->printf(";Helo from the Galvo Module");
+        }
+    }
 }
 
 int GalvoControl::sendSPI(uint8_t *b, int cnt, uint8_t *r){

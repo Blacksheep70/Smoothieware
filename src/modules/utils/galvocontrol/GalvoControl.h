@@ -18,6 +18,7 @@ class GalvoControl : public Module {
         virtual ~GalvoControl();
 
         void on_module_loaded();
+        void on_gcode_received(void *);
 
     private:
         bool config_module(uint16_t cs);
@@ -26,6 +27,7 @@ class GalvoControl : public Module {
 
         MCP4922 *dac;
         Pin spi_cs_pin;
+        Pin spi_latch_pin;
         mbed::SPI *spi;
         uint8_t id;
 

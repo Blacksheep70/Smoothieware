@@ -15,8 +15,8 @@ class MCP4922{
 public:
 
     enum Channel{
-        X = 0,
-        Y = 1
+        X = 1,
+        Y = 0
     };
 
     MCP4922(std::function<int(uint8_t *b, int cnt)> spi, Pin latchPin);

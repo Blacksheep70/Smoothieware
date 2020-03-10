@@ -191,6 +191,17 @@ void StepTicker::step_tick (void)
 
             // step the motor
             bool ismoving= motor[m]->step(); // returns false if the moving flag was set to false externally (probes, endstops etc)
+            
+            if (galvo != nullptr){
+                if(m == 0){
+                    galvo->stepX(current_block->direction_bits[m]);
+                }
+                    
+                if(m == 1){
+                    galvo->stepY(current_block->direction_bits[m]);
+                }
+            }
+            
             // we stepped so schedule an unstep
             unstep.set(m);
 
@@ -284,3 +295,9 @@ int StepTicker::register_motor(StepperMotor* m)
     motor[num_motors++] = m;
     return num_motors - 1;
 }
+
+void StepTicker::register_galvo(GalvoControl* g)
+{
+    galvo = g;
+}
+

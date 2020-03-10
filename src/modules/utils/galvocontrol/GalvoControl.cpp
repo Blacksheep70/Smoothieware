@@ -6,6 +6,7 @@
 #include "ConfigValue.h"
 #include "libs/StreamOutput.h"
 #include "libs/StreamOutputPool.h"
+#include "libs/StepTicker.h"
 #include "Robot.h"
 #include "StepperMotor.h"
 #include "PublicDataRequest.h"
@@ -109,6 +110,14 @@ bool GalvoControl::config_module(uint16_t cs){
 
     this->register_for_event(ON_GCODE_RECEIVED);
 
+
+    //Register this module in the step ticker
+    THEKERNEL->step_ticker->register_galvo(this);
+
+
+    //Reset the pointer to be at position (0, 0)
+    dac->output2(position[0], position[1]);
+
     return true;
 }
 
@@ -153,6 +162,26 @@ void GalvoControl::on_gcode_received(void *argument){
 
         }
     }
+}
+
+void GalvoControl::stepX(bool reverse){
+    if(reverse && position[0] > 0){
+        position[0]--;
+    }
+    else if (position[0] < ((1 << 12) - 1)){
+        position[0]++;
+    }
+    dac->outputX(position[0]);
+}
+
+void GalvoControl::stepY(bool reverse){
+    if(reverse && position[1] > 0){
+        position[1]--;
+    }
+    else if (position[1] < ((1 << 12) - 1)){
+        position[1]++;
+    }
+    dac->outputY(position[1]);
 }
 
 int GalvoControl::sendSPI(uint8_t *b, int cnt){

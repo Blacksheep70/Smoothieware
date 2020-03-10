@@ -20,10 +20,16 @@ class GalvoControl : public Module {
         void on_module_loaded();
         void on_gcode_received(void *);
 
+
+        void stepX(bool reverse = false);
+        void stepY(bool reverse = false);
+
     private:
         bool config_module(uint16_t cs);
 
         int sendSPI(uint8_t *b, int cnt);
+
+        unsigned short position[2] {0, 0};
 
         MCP4922 *dac;
         Pin spi_cs_pin;

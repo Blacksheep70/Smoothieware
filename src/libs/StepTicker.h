@@ -17,6 +17,7 @@
 
 #include "ActuatorCoordinates.h"
 #include "TSRingBuffer.h"
+#include "modules/utils/galvocontrol/GalvoControl.h"
 
 class StepperMotor;
 class Block;
@@ -32,6 +33,7 @@ class StepTicker{
         void set_frequency( float frequency );
         void set_unstep_time( float microseconds );
         int register_motor(StepperMotor* motor);
+        void register_galvo(GalvoControl* galvo);
         float get_frequency() const { return frequency; }
         void unstep_tick();
         const Block *get_current_block() const { return current_block; }
@@ -54,6 +56,8 @@ class StepTicker{
         uint32_t period;
         std::array<StepperMotor*, k_max_actuators> motor;
         std::bitset<k_max_actuators> unstep;
+
+        GalvoControl* galvo = nullptr;
 
         Block *current_block;
         uint32_t current_tick{0};

@@ -23,7 +23,7 @@ class GalvoControl : public Module {
     private:
         bool config_module(uint16_t cs);
 
-        int sendSPI(uint8_t *b, int cnt, uint8_t *r);
+        int sendSPI(uint8_t *b, int cnt);
 
         MCP4922 *dac;
         Pin spi_cs_pin;

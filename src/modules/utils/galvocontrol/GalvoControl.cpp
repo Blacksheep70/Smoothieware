@@ -61,10 +61,18 @@ bool GalvoControl::config_module(uint16_t cs){
 
     using std::placeholders::_1;
     using std::placeholders::_2;
-    using std::placeholders::_3;
+
+    spi_latch_pin.from_string(THEKERNEL->config->value( galvo_controller_checksum, cs, spi_latch_pin_checksum)->by_default("nc")->as_string())->as_output();
+    if(!spi_latch_pin.connected()) {
+        THEKERNEL->streams->printf("GalvoControl ERROR: dac latch pin not defined\n");
+        return false; // if not defined then we can't use this instance
+    }
+
+    //Unlatch the output
+    spi_latch_pin.set(1);
 
     if(str == "MCP4922"){
-        dac = new MCP4922(std::bind( &GalvoControl::sendSPI, this, _1, _2, _3));
+        dac = new MCP4922(std::bind( &GalvoControl::sendSPI, this, _1, _2), spi_latch_pin);
     }
     else{
         THEKERNEL->streams->printf("GalvoControl ERROR: Unknown DAC type: %s\n", str.c_str());
@@ -76,14 +84,9 @@ bool GalvoControl::config_module(uint16_t cs){
         THEKERNEL->streams->printf("GalvoControl ERROR: chip select not defined\n");
         return false; // if not defined then we can't use this instance
     }
-    spi_cs_pin.set(1);
 
-    spi_latch_pin.from_string(THEKERNEL->config->value( galvo_controller_checksum, cs, spi_latch_pin_checksum)->by_default("nc")->as_string())->as_output();
-    if(!spi_latch_pin.connected()) {
-        THEKERNEL->streams->printf("GalvoControl ERROR: dac latch pin not defined\n");
-        return false; // if not defined then we can't use this instance
-    }
-    spi_latch_pin.set(1);
+    //Unselect the DAC
+    spi_cs_pin.set(1);
     
     // select which SPI channel to use
     int spi_channel = THEKERNEL->config->value(galvo_controller_checksum, cs, spi_channel_checksum)->by_default(1)->as_number();
@@ -114,15 +117,48 @@ void GalvoControl::on_gcode_received(void *argument){
 
     if (gcode->has_m){
         if(gcode->m == 888){
-            gcode->stream->printf(";Helo from the Galvo Module");
+            gcode->stream->printf("Running galvo test\n");
+
+            const unsigned short maxval = (1 << 12) - 1;
+
+            const unsigned short line[] = {0, maxval/2, maxval};
+
+            int idx = 0;
+            int output_every = 50;
+            
+            gcode->stream->printf("X channel\n");
+            for (int i = 0; i < 100000; i++){
+                if (i % output_every == 0){
+                    dac->output(MCP4922::Channel::X, line[idx]);
+                    idx = idx == 2 ? 0 : idx + 1 ;
+                }
+            }
+
+            gcode->stream->printf("Y channels\n");
+            for (int i = 0; i < 100000; i++){
+                if (i % output_every == 0){
+                    dac->output(MCP4922::Channel::Y, line[idx]);
+                    idx = idx == 2 ? 0 : idx + 1 ;
+                }
+            }
+
+
+            gcode->stream->printf("Both channels\n");
+            for (int i = 0; i < 100000; i++){
+                if (i % output_every == 0){
+                    dac->output2(line[idx], line[idx]);
+                    idx = idx == 2 ? 0 : idx + 1 ;
+                }
+            }
+
         }
     }
 }
 
-int GalvoControl::sendSPI(uint8_t *b, int cnt, uint8_t *r){
+int GalvoControl::sendSPI(uint8_t *b, int cnt){
     spi_cs_pin.set(0);
     for (int i = 0; i < cnt; ++i) {
-        r[i]= spi->write(b[i]);
+        spi->write(b[i]);
     }
     spi_cs_pin.set(1);
     return cnt;

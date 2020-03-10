@@ -8,6 +8,7 @@
 #define MCP4X_DEFAULTS			(MCP4X_BUFFERED | MCP4X_GAIN_1X | MCP4X_ACTIVE)
 
 #include <functional>
+#include "Pin.h"
 
 class MCP4922{
 
@@ -18,7 +19,7 @@ public:
         Y = 1
     };
 
-    MCP4922(std::function<int(uint8_t *b, int cnt, uint8_t *r)> spi);
+    MCP4922(std::function<int(uint8_t *b, int cnt)> spi, Pin latchPin);
     ~MCP4922();
 
     void setGain2x(Channel chan, bool gain2x = 1);
@@ -30,15 +31,17 @@ public:
 	void outputY(unsigned short data) 					{ output(Y, data);	}
 	void output2(unsigned short _outX, unsigned short _outY);
 
+    void write(unsigned int data);
     void latch();
 
 
 private:
 
-    std::function<int(uint8_t *b, int cnt, uint8_t *r)> spi;
+    std::function<int(uint8_t *b, int cnt)> spi;
 
     unsigned int vrefs[2];
     unsigned int regs[2];
     bool autoLatch;
+    Pin latchPin;
 
 };

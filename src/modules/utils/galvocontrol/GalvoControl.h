@@ -30,6 +30,8 @@ class GalvoControl : public Module {
         int sendSPI(uint8_t *b, int cnt);
 
         unsigned short position[2] {0, 0};
+        unsigned short x_delta_per_step;
+        unsigned short y_delta_per_step;
 
         MCP4922 *dac;
         Pin spi_cs_pin;

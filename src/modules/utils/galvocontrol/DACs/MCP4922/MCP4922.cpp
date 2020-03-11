@@ -23,6 +23,9 @@ void MCP4922::output(Channel chan, unsigned short data){
     if (data > maxval)
 		data = maxval;
 
+	if ((chan == X && mirrorX) || (chan == Y && mirrorY))
+		data = maxval - data;
+
 	// clear value bits
 	regs[chan] &= 0xF000;
 	regs[chan] |= data;
@@ -37,7 +40,6 @@ void MCP4922::output2(unsigned short _outX, unsigned short _outY){
     if(autoLatch)
 		latch();
 }
-
 
 void MCP4922::write(unsigned int data){
 	uint8_t buf[2] {(uint8_t)((data & 0xff00) >> 8), (uint8_t)(data & 0xff)};

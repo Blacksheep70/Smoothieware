@@ -27,6 +27,11 @@
 #define spi_cs_pin_checksum            CHECKSUM("spi_cs_pin")
 #define spi_latch_pin_checksum         CHECKSUM("spi_latch_pin")
 #define spi_frequency_checksum         CHECKSUM("spi_frequency")
+#define x_axis_change_per_step         CHECKSUM("x_delta_per_step")
+#define y_axis_change_per_step         CHECKSUM("y_delta_per_step")
+#define mirror_x                       CHECKSUM("mirror_x")
+#define mirror_y                       CHECKSUM("mirror_y")
+
 
 GalvoControl::GalvoControl(uint8_t id) : id(id){
     
@@ -108,6 +113,13 @@ bool GalvoControl::config_module(uint16_t cs){
     this->spi->frequency(spi_frequency);
     this->spi->format(8, 0); // 8bit, mode0
 
+
+    this->x_delta_per_step = THEKERNEL->config->value(galvo_controller_checksum, cs, x_axis_change_per_step)->by_default(20)->as_number();
+    this->y_delta_per_step = THEKERNEL->config->value(galvo_controller_checksum, cs, y_axis_change_per_step)->by_default(20)->as_number();
+
+    dac->setMirrorX(THEKERNEL->config->value(galvo_controller_checksum, cs, mirror_x)->by_default(false)->as_bool());
+    dac->setMirrorY(THEKERNEL->config->value(galvo_controller_checksum, cs, mirror_y)->by_default(false)->as_bool());
+
     this->register_for_event(ON_GCODE_RECEIVED);
 
 
@@ -166,20 +178,20 @@ void GalvoControl::on_gcode_received(void *argument){
 
 void GalvoControl::stepX(bool reverse){
     if(reverse && position[0] > 0){
-        position[0]--;
+        position[0] -= x_delta_per_step;
     }
     else if (position[0] < ((1 << 12) - 1)){
-        position[0]++;
+        position[0] += x_delta_per_step;
     }
     dac->outputX(position[0]);
 }
 
 void GalvoControl::stepY(bool reverse){
     if(reverse && position[1] > 0){
-        position[1]--;
+        position[1] -= y_delta_per_step;
     }
     else if (position[1] < ((1 << 12) - 1)){
-        position[1]++;
+        position[1] += y_delta_per_step;
     }
     dac->outputY(position[1]);
 }

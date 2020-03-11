@@ -31,6 +31,9 @@ public:
 	void outputY(unsigned short data) 					{ output(Y, data);	}
 	void output2(unsigned short _outX, unsigned short _outY);
 
+    void setMirrorX(bool mirror)                        {mirrorX = mirror;  }
+    void setMirrorY(bool mirror)                        {mirrorY = mirror;  }
+
     void write(unsigned int data);
     void latch();
 
@@ -42,6 +45,8 @@ private:
     unsigned int vrefs[2];
     unsigned int regs[2];
     bool autoLatch;
+    bool mirrorX;
+    bool mirrorY;
     Pin latchPin;
 
 };

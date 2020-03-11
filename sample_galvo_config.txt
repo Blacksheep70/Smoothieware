@@ -1,0 +1,54 @@
+# Smoothieboard configuration file, see http://smoothieware.org/configuring-smoothie
+# NOTE Lines must not exceed 132 characters, and '#' characters mean what follows is ignored
+## Robot module configurations : general handling of movement G-codes and slicing into moves
+
+# Basic motion configuration
+default_feed_rate                            4000             # Default speed (mm/minute) for G1/G2/G3 moves
+default_seek_rate                            4000             # Default speed (mm/minute) for G0 moves
+mm_per_arc_segment                           0.0              # Fixed length for line segments that divide arcs, 0 to disable
+mm_max_arc_error                             0.01             # The maximum error for line segments that divide arcs
+
+alpha_steps_per_mm                           5               # Steps per mm for alpha ( X ) stepper (or galvo if galvo module is enabled)
+beta_steps_per_mm                            5               # Steps per mm for beta ( Y ) stepper (or galvo if galvo module is enabled)
+gamma_steps_per_mm                           500            # Steps per mm for gamma ( Z ) stepper
+
+# Planner module configuration : Look-ahead and acceleration configuration
+# See http://smoothieware.org/motion-control
+acceleration                                 100000           # Acceleration in mm/second/second.
+junction_deviation                           0.01             # See http://smoothieware.org/motion-control#junction-deviation
+
+z_axis_max_speed                            300              # Maximum speed in mm/min
+x_axis_max_speed                            300000
+y_axis_max_speed                            300000
+
+alpha_step_pin                              2.0              # Pin for alpha stepper step signal
+alpha_dir_pin                               0.5              # Pin for alpha stepper direction, add '!' to reverse direction
+alpha_en_pin                                0.4              # Pin for alpha enable pin
+alpha_current                               1.5              # X stepper motor current
+alpha_max_rate                              300000.0         # Maximum rate in mm/min
+
+beta_step_pin                               2.1              # Pin for beta stepper step signal
+beta_dir_pin                                0.11             # Pin for beta stepper direction, add '!' to reverse direction
+beta_en_pin                                 0.10             # Pin for beta enable
+beta_current                                1.5              # Y stepper motor current
+beta_max_rate                               300000.0         # Maxmimum rate in mm/min
+
+gamma_step_pin                              2.2              # Pin for gamma stepper step signal
+gamma_dir_pin                               0.20             # Pin for gamma stepper direction, add '!' to reverse direction
+gamma_en_pin                                0.19             # Pin for gamma enable
+gamma_current                               1.5              # Z stepper motor current
+gamma_max_rate                              300.0            # Maximum rate in mm/min
+
+galvo_control.alpha.enable                  true
+galvo_control.alpha.dac                     MCP4922
+galvo_control.alpha.spi_channel             0                
+galvo_control.alpha.spi_cs_pin              0.16             
+galvo_control.alpha.spi_latch_pin           0.17
+galvo_control.alpha.spi_frequency           100000
+galvo_control.alpha.x_delta_per_step        20
+galvo_control.alpha.y_delta_per_step        20
+galvo_control.alpha.mirror_x                true
+
+laser_module_enable                         true
+laser_module_ttl_pin                        1.30
+laser_module_pwm_pin                        1.18
